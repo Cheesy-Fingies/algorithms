@@ -218,6 +218,115 @@ void quickSort(int A[], int p, int r)
     }
 }
 
+void shellSort(int A[], int n) 
+{
+  int gap, i, j, tempVar;
+
+  for (int gap = n / 2; gap > 0; gap /= 2) 
+  {
+    for (int i = gap; i < n; i++) 
+    {
+      tempVar = A[i];
+
+      for (j = i; j >= gap && A[j - gap] > tempVar; j -= gap) 
+      {
+        A[j] = A[j - gap];
+      }
+
+      A[j] = tempVar;
+    }
+  }
+}
+
+void copyArray(int A[], int B[], int n)
+{
+    for(int i = 0; i < n; i++)
+    {
+        B[i] = A[i];
+    }
+}
+
+void countingSort(int A[], int n, int k)
+{
+    int B[n];
+    int C[k + 1];
+
+    copyArray(A, B, n);
+
+    for(int i = 0; i <= k; i++)
+    {
+        C[i] = 0;
+    }
+
+    for(int j = 0; j < n; j++)
+    {
+        C[B[j]] = C[B[j]] + 1;
+    }
+
+    for(int l = 1; l <= k; l++)
+    {
+        C[l] = C[l] + C[l - 1];
+    }
+
+    for(int m = n - 1; m >= 0; m--)
+    {
+        A[C[B[m]] - 1] = B[m];
+        C[B[m]] = C[B[m]] - 1;
+    }
+}
+
+int getMaximum(int A[], int n)
+{
+    int max = A[0];
+
+    for(int i = 1; i < n; i++)
+    {
+        if(A[i] > max)
+        {
+            max = A[i];
+        }
+    }
+
+    return max;
+}
+
+void radixCountingSort(int A[], int n, int digit)
+{
+    int B[n];
+    int C[10] = { 0 };
+
+    for(int j = 0; j < n; j++)
+    {
+        C[(A[j] / digit) % 10] = C[(A[j] / digit) % 10] + 1;
+    }
+
+    for(int l = 1; l < 10; l++)
+    {
+        C[l] = C[l] + C[l - 1];
+    }
+
+    for(int m = n - 1; m >= 0; m--)
+    {
+        B[C[(A[m] / digit) % 10] - 1]= A[m];
+        C[(A[m] / digit) % 10] = C[(A[m] / digit) % 10] - 1;
+    }
+
+    for(int i = 0; i < n; i++)
+    {
+        A[i] = B[i];
+    }
+}
+
+void radixSort(int A[], int n)
+{
+    int radixMax = getMaximum(A, n);
+
+    for(int i = 1; radixMax / i > 0; i *= 10)
+    {
+        radixCountingSort(A, n, i);
+    }
+}
+
 void bogoSort(int A[], int originalA[], int n)
 {
     while(A != originalA)
