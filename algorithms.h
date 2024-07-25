@@ -31,4 +31,14 @@ int partition(int A[], int p, int r);
 
 void quickSort(int A[], int p, int r);
 
+void shellSort(int A[], int n);
+
+void countingSort(int A[], int n, int k);
+
+int getMaximum(int A[], int n);
+
+void radixCountingSort(int A[], int n, int digit);
+
+void radixSort(int A[], int n);
+
 void bogoSort(int A[], int originalA[], int n);
