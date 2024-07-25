@@ -47,11 +47,14 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
 #define BUBBLE_SORT 2
 #define HEAP_SORT 3
 #define QUICK_SORT 4
+#define SHELL_SORT 5
+#define COUNTING_SORT 6
+#define RADIX_SORT 7
 #define BOGO_SORT 15
 
-//--------------------ARRAY INFORMATION-------------------------------------------------
-int sortingArray[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 
-    20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 
+//--------------------ARRAY INFORMATION-------------------------------------------------  //Change size of array to suit needs. sortingArray is for actual shuffling,
+int sortingArray[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,  //STATIC_ARRAY is to maintain an image of the original array at all times.
+    20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,   //Make sure both arrays are the same size and same order when in the sorted form!!!
     41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 
     61, 62, 63, 64};
 
@@ -63,7 +66,39 @@ static int STATIC_ARRAY[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 
 #define ARRAY_SIZE  *(&sortingArray + 1) - sortingArray
 //--------------------------------------------------------------------------------------
 
-//--------------------PRINTING FUNCTIONS------------------------------------------------
+//--------------------PRINTING AND UTILITY FUNCTIONS------------------------------------
+void swapElements(int A[], int m, int n)
+{
+  int storage;
+
+  storage = A[m];
+  A[m] = A[n];
+  A[n] = storage;
+}
+
+void copyArray(int A[], int B[], int n)
+{
+    for(int i = 0; i < n; i++)
+    {
+        B[i] = A[i];
+    }
+}
+
+int getMaximum(int A[], int n)
+{
+    int max = A[0];
+
+    for(int i = 1; i < n; i++)
+    {
+        if(A[i] > max)
+        {
+            max = A[i];
+        }
+    }
+
+    return max;
+}
+
 void writeToScreen(char C[])
 {
   display.setCursor(0, 0);     // Start at top-left corner
@@ -82,6 +117,7 @@ void drawToScreen(int A[], int arraySize)
     display.display();
     delayMicroseconds(1);
   }
+  delayMicroseconds(1);
 }
 
 int algorithmCode(void)
@@ -106,9 +142,7 @@ void shuffle(int A[], int n)
     {
         j = rand() % (i + 1);       //good use of the modulo op here, limits how high index num can go
         
-        tempVar = A[j];
-        A[j] = A[i];
-        A[i] = tempVar;
+        swapElements(A, i, j);
     }
 }
 //-----------------------------
@@ -126,12 +160,10 @@ void insertionSort(int A[], int n)
           A[j + 1] = A[j];
           j--;
           drawToScreen(sortingArray, ARRAY_SIZE);
-          delayMicroseconds(1);
         }
 
         A[j + 1] = tempHoldVar;
         drawToScreen(sortingArray, ARRAY_SIZE);
-        delayMicroseconds(1);
     }
 }
 //-----------------------------
@@ -191,7 +223,6 @@ void mergeFunction(int A[], int p, int q, int r)
   }
 
   drawToScreen(sortingArray, ARRAY_SIZE);
-  delayMicroseconds(1);
 }
 
 void mergeSort(int A[], int p, int r)
@@ -216,11 +247,8 @@ void bubbleSort(int A[], int n)
         {
             if(A[j] < A[j - 1])
             {
-              tempVar = A[j];
-              A[j] = A[j - 1];
-              A[j - 1] = tempVar;
+              swapElements(A, j, j - 1);
               drawToScreen(sortingArray, ARRAY_SIZE);
-              delayMicroseconds(1);
             }
         }
     }
@@ -258,12 +286,9 @@ void maxHeapify(int A[], int n, int i)
 
     if(largest != i)
     {
-        tempVar = A[largest];
-        A[largest] = A[i];
-        A[i] = tempVar;
+        swapElements(A, i, largest);
 
         drawToScreen(sortingArray, ARRAY_SIZE);
-        delayMicroseconds(1);
 
         maxHeapify(A, n, largest);
     }
@@ -279,18 +304,13 @@ void buildMaxHeap(int A[], int n)
 
 void heapSort(int A[], int n)
 {   
-    int tempVar;
-
     buildMaxHeap(A, n);
 
     for(int i = n - 1; i >= 0; i--)
     {
-        tempVar = A[i];
-        A[i] = A[0];
-        A[0] = tempVar;
+        swapElements(A, 0, i);
 
         drawToScreen(sortingArray, ARRAY_SIZE);
-        delayMicroseconds(1);
 
         maxHeapify(A, i, 0);
     }
@@ -310,21 +330,15 @@ int partition(int A[], int p, int r)
         {
             i++;
 
-            tempVar = A[i];
-            A[i] = A[j];
-            A[j] = tempVar;
+            swapElements(A, i, j);
 
             drawToScreen(sortingArray, ARRAY_SIZE);
-            delayMicroseconds(1);
         }
     }
 
-    tempVar = A[i + 1];
-    A[i + 1] = A[r];
-    A[r] = tempVar; 
+    swapElements(A, i + 1, r);
 
     drawToScreen(sortingArray, ARRAY_SIZE);
-    delayMicroseconds(1);
 
     return i + 1;
 }
@@ -336,6 +350,106 @@ void quickSort(int A[], int p, int r)
         int q = partition(A, p, r);
         quickSort(A, p, q - 1);
         quickSort(A, q + 1, r);
+    }
+}
+//-----------------------------
+
+//---SHELL SORT----------------
+void shellSort(int A[], int n) 
+{
+  int gap, i, j, tempVar;
+
+  for (int gap = n / 2; gap > 0; gap /= 2) 
+  {
+    for (int i = gap; i < n; i++) 
+    {
+      tempVar = A[i];
+
+      for (j = i; j >= gap && A[j - gap] > tempVar; j -= gap) 
+      {
+        A[j] = A[j - gap];
+        drawToScreen(sortingArray, ARRAY_SIZE);
+      }
+
+      A[j] = tempVar;
+      drawToScreen(sortingArray, ARRAY_SIZE);
+    }
+  }
+}
+//-----------------------------
+
+//---COUNTING SORT-------------
+void countingSort(int A[], int n, int k)
+{
+    int B[n];
+    int C[k + 1];
+
+    copyArray(A, B, n);
+
+    for(int i = 0; i <= k; i++)
+    {
+        C[i] = 0;
+    }
+
+    for(int j = 0; j < n; j++)
+    {
+        C[B[j]] = C[B[j]] + 1;
+    }
+
+    for(int l = 1; l <= k; l++)
+    {
+        C[l] = C[l] + C[l - 1];
+    }
+
+    for(int m = n - 1; m >= 0; m--)
+    {
+        A[C[B[m]] - 1] = B[m];
+        drawToScreen(sortingArray, ARRAY_SIZE);
+        C[B[m]] = C[B[m]] - 1;
+    }
+}
+//-----------------------------
+
+//---RADIX SORT----------------
+void radixCountingSort(int A[], int n, int digit)
+{
+    int B[n];
+    int C[10] = { 0 };
+
+    copyArray(A, B, n);
+
+    for(int j = 0; j < n; j++)
+    {
+        C[(A[j] / digit) % 10] = C[(A[j] / digit) % 10] + 1;
+    }
+
+    for(int l = 1; l < 10; l++)
+    {
+        C[l] = C[l] + C[l - 1];
+    }
+
+    for(int m = n - 1; m >= 0; m--)
+    {
+        B[C[(A[m] / digit) % 10] - 1]= A[m];
+        drawToScreen(B, ARRAY_SIZE);
+        C[(A[m] / digit) % 10] = C[(A[m] / digit) % 10] - 1;
+    }
+
+    for(int i = 0; i < n; i++)
+    {
+        A[i] = B[i];
+    }
+
+    drawToScreen(sortingArray, ARRAY_SIZE);
+}
+
+void radixSort(int A[], int n)
+{
+    int radixMax = getMaximum(A, n);
+
+    for(int i = 1; radixMax / i > 0; i *= 10)
+    {
+        radixCountingSort(A, n, i);
     }
 }
 //-----------------------------
@@ -357,7 +471,7 @@ void bogoSort(int A[], int originalA[], int n)
 void setup() 
 {
   // Initialize serial communication
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC)) {
@@ -409,26 +523,28 @@ void loop()
       }
       lastDipState = dipState; 
 
+      shuffleButton = digitalRead(LEFT_BUTTON);
+
+      if(shuffleButton != lastShuffleButton)
+      {
+        if(shuffleButton == HIGH)
+        {
+          shuffle(sortingArray, ARRAY_SIZE);
+          display.clearDisplay();
+          drawToScreen(sortingArray, ARRAY_SIZE);
+          isShuffled = true;
+        }
+        lastShuffleButton = shuffleButton;
+      }
+
       switch(dipState)
       {
         case INSERTION_SORT:
           if(isShuffled == false){writeToScreen("INSERTION SORT");}   // Control statement to prevent text overflow and incorrect printing 
 
-          shuffleButton = digitalRead(LEFT_BUTTON);
           sortButton = digitalRead(RIGHT_BUTTON);
-
-          if(shuffleButton != lastShuffleButton)
-          {
-            if(shuffleButton == HIGH)
-            {
-              shuffle(sortingArray, ARRAY_SIZE);
-              display.clearDisplay();
-              drawToScreen(sortingArray, ARRAY_SIZE);
-              isShuffled = true;
-            }
-            lastShuffleButton = shuffleButton;
-          }
-          else if(sortButton != lastSortButton)
+          
+          if(sortButton != lastSortButton)
           {
             if(sortButton == HIGH)
             {
@@ -448,21 +564,9 @@ void loop()
         case MERGE_SORT:
           if(isShuffled == false){writeToScreen("MERGE SORT");}
 
-          shuffleButton = digitalRead(LEFT_BUTTON);
           sortButton = digitalRead(RIGHT_BUTTON);
-
-          if(shuffleButton != lastShuffleButton)
-          {
-            if(shuffleButton == HIGH)
-            {
-              shuffle(sortingArray, ARRAY_SIZE);
-              display.clearDisplay();
-              drawToScreen(sortingArray, ARRAY_SIZE);
-              isShuffled = true;
-            }
-            lastShuffleButton = shuffleButton;
-          }
-          else if(sortButton != lastSortButton)
+          
+          if(sortButton != lastSortButton)
           {
             if(sortButton == HIGH)
             {
@@ -482,21 +586,9 @@ void loop()
         case BUBBLE_SORT:
           if(isShuffled == false){writeToScreen("BUBBLE SORT");}
 
-          shuffleButton = digitalRead(LEFT_BUTTON);
           sortButton = digitalRead(RIGHT_BUTTON);
-
-          if(shuffleButton != lastShuffleButton)
-          {
-            if(shuffleButton == HIGH)
-            {
-              shuffle(sortingArray, ARRAY_SIZE);
-              display.clearDisplay();
-              drawToScreen(sortingArray, ARRAY_SIZE);
-              isShuffled = true;
-            }
-            lastShuffleButton = shuffleButton;
-          }
-          else if(sortButton != lastSortButton)
+          
+          if(sortButton != lastSortButton)
           {
             if(sortButton == HIGH)
             {
@@ -516,21 +608,9 @@ void loop()
         case HEAP_SORT:
           if(isShuffled == false){writeToScreen("HEAP SORT");}
 
-          shuffleButton = digitalRead(LEFT_BUTTON);
           sortButton = digitalRead(RIGHT_BUTTON);
 
-          if(shuffleButton != lastShuffleButton)
-          {
-            if(shuffleButton == HIGH)
-            {
-              shuffle(sortingArray, ARRAY_SIZE);
-              display.clearDisplay();
-              drawToScreen(sortingArray, ARRAY_SIZE);
-              isShuffled = true;
-            }
-            lastShuffleButton = shuffleButton;
-          }
-          else if(sortButton != lastSortButton)
+          if(sortButton != lastSortButton)
           {
             if(sortButton == HIGH)
             {
@@ -548,23 +628,11 @@ void loop()
           }
         break;
         case QUICK_SORT:
-           if(isShuffled == false){writeToScreen("QUICK SORT");}
+          if(isShuffled == false){writeToScreen("QUICK SORT");}
 
-          shuffleButton = digitalRead(LEFT_BUTTON);
           sortButton = digitalRead(RIGHT_BUTTON);
 
-          if(shuffleButton != lastShuffleButton)
-          {
-            if(shuffleButton == HIGH)
-            {
-              shuffle(sortingArray, ARRAY_SIZE);
-              display.clearDisplay();
-              drawToScreen(sortingArray, ARRAY_SIZE);
-              isShuffled = true;
-            }
-            lastShuffleButton = shuffleButton;
-          }
-          else if(sortButton != lastSortButton)
+          if(sortButton != lastSortButton)
           {
             if(sortButton == HIGH)
             {
@@ -581,24 +649,78 @@ void loop()
             continue;
           }
         break;
+        case SHELL_SORT:
+          if(isShuffled == false){writeToScreen("SHELL SORT");}
+
+          sortButton = digitalRead(RIGHT_BUTTON);
+
+          if(sortButton != lastSortButton)
+          {
+            if(sortButton == HIGH)
+            {
+              if(isShuffled == true)
+              {
+                shellSort(sortingArray, ARRAY_SIZE);
+                isShuffled = false;
+              }
+            }
+            lastSortButton = sortButton;
+          }
+          else
+          {
+            continue;
+          }
+        break;
+        case COUNTING_SORT:
+          if(isShuffled == false){writeToScreen("COUNTING SORT");}
+
+          sortButton = digitalRead(RIGHT_BUTTON);
+
+          if(sortButton != lastSortButton)
+          {
+            if(sortButton == HIGH)
+            {
+              if(isShuffled == true)
+              {
+                countingSort(sortingArray, ARRAY_SIZE, STATIC_ARRAY[ARRAY_SIZE - 1]);
+                isShuffled = false;
+              }
+            }
+            lastSortButton = sortButton;
+          }
+          else
+          {
+            continue;
+          }
+        break;
+        case RADIX_SORT:
+          if(isShuffled == false){writeToScreen("RADIX SORT");}
+
+          sortButton = digitalRead(RIGHT_BUTTON);
+
+          if(sortButton != lastSortButton)
+          {
+            if(sortButton == HIGH)
+            {
+              if(isShuffled == true)
+              {
+                radixSort(sortingArray, ARRAY_SIZE);
+                isShuffled = false;
+              }
+            }
+            lastSortButton = sortButton;
+          }
+          else
+          {
+            continue;
+          }
+        break;
         case BOGO_SORT:
           if(isShuffled == false){writeToScreen("BOGO SORT");}
 
-          shuffleButton = digitalRead(LEFT_BUTTON);
           sortButton = digitalRead(RIGHT_BUTTON);
 
-          if(shuffleButton != lastShuffleButton)
-          {
-            if(shuffleButton == HIGH)
-            {
-              shuffle(sortingArray, ARRAY_SIZE);
-              display.clearDisplay();
-              drawToScreen(sortingArray, ARRAY_SIZE);
-              isShuffled = true;
-            }
-            lastShuffleButton = shuffleButton;
-          }
-          else if(sortButton != lastSortButton)
+          if(sortButton != lastSortButton)
           {
             if(sortButton == HIGH)
             {
